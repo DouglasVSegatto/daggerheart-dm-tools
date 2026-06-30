@@ -542,9 +542,28 @@
             filtered = filtered.filter(item => {
                 const name = getLocStr(item.name).toLowerCase();
                 const desc = Array.isArray(item.description)
-                    ? item.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ').toLowerCase()
+                    ? item.description.map(d => d.paragraph ? getLocStr(d.paragraph) : (d.list ? d.list.map(li => getLocStr(li)).join(' ') : '')).join(' ').toLowerCase()
                     : (typeof item.description === 'string' ? item.description.toLowerCase() : '');
-                return name.includes(query) || desc.includes(query);
+                // Search inside features
+                let featText = '';
+                const featureSources = [
+                    item.features,
+                    item.classFeatures,
+                    item.foundation && item.foundation.features,
+                    item.specialization && item.specialization.features,
+                    item.mastery && item.mastery.features,
+                    item.hopeFeature ? [item.hopeFeature] : null
+                ];
+                for (const src of featureSources) {
+                    if (!Array.isArray(src)) continue;
+                    for (const f of src) {
+                        if (f.name) featText += ' ' + getLocStr(f.name).toLowerCase();
+                        if (f.description && Array.isArray(f.description)) {
+                            featText += ' ' + f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ').toLowerCase();
+                        }
+                    }
+                }
+                return name.includes(query) || desc.includes(query) || featText.includes(query);
             });
         }
 
