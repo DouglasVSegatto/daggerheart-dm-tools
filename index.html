@@ -36,6 +36,9 @@
         .dot:hover { border-color: #8b7355; transform: scale(1.1); }
         .dot.filled-hp { background-color: #c0392b; border-color: #c0392b; box-shadow: 0 0 6px #c0392b60; }
         .dot.filled-stress { background-color: #8e44ad; border-color: #8e44ad; box-shadow: 0 0 6px #8e44ad60; }
+        .dot.filled-hope { background-color: #d4a017; border-color: #d4a017; box-shadow: 0 0 6px #d4a01760; }
+        .dot.filled-armor { background-color: #2980b9; border-color: #2980b9; box-shadow: 0 0 6px #2980b960; }
+        .dot.filled-fear { background-color: #4a0a6b; border-color: #7b2fa8; box-shadow: 0 0 8px #7b2fa880; }
 
         .modal-overlay { backdrop-filter: blur(4px); background: rgba(0,0,0,0.85); }
         .modal-panel { background: linear-gradient(145deg, #252118, #1e1b16); border: 1px solid #4a3f30; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
@@ -82,13 +85,19 @@
 <!-- Nav Bar -->
 <nav class="sticky top-0 z-30 bg-[#1a1714]/95 backdrop-blur border-b border-[#3d362a] -mx-4 px-4 py-3 mb-6">
     <div class="grid grid-cols-3 items-center">
-        <span class="font-[Cinzel] text-sm tracking-widest uppercase" style="color: var(--accent-1)">DM Tools</span>
+        <div class="flex flex-col items-start">
+            <span class="font-[Cinzel] text-sm tracking-widest uppercase" style="color: var(--accent-1)">DM Tools</span>
+            <input id="campaignName" type="text" placeholder="Campaign name..." oninput="localStorage.setItem('dh_campaign_name', this.value); this.style.width = Math.min(this.value.length + 2, 56) + 'ch'" class="bg-transparent font-[Cinzel] text-xs font-bold uppercase tracking-widest text-[#d4a017] outline-none border-b border-transparent focus:border-[#d4a017] placeholder-zinc-700" style="width:18ch;max-width:42ch">
+        </div>
         <div class="flex items-center justify-center gap-4">
-            <button onclick="switchTab('tracker')" id="tabTracker" class="tab-btn font-[Cinzel] text-[11px] uppercase tracking-wider pb-1 font-bold active">⚔️ Tracker</button>
+            <button onclick="switchTab('tracker')" id="tabTracker" class="tab-btn font-[Cinzel] text-[11px] uppercase tracking-wider pb-1 font-bold active">⚔️ Combat Tracker</button>
             <button onclick="switchTab('compendium')" id="tabCompendium" class="tab-btn font-[Cinzel] text-[11px] uppercase tracking-wider pb-1 font-bold">📖 Compendium</button>
         </div>
         <div id="trackerActions" class="flex items-center justify-end gap-2">
-            <button onclick="openAddModal()" class="btn-action text-[10px] px-4 py-2 rounded-full font-bold uppercase text-white font-[Cinzel]">+ Add Creature</button>
+            <button onclick="saveSession()" class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-zinc-400 font-[Cinzel] hover:border-[#d4a017] hover:text-[#d4a017]">💾 Save</button>
+            <label class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-zinc-400 font-[Cinzel] hover:border-[#d4a017] hover:text-[#d4a017] cursor-pointer">📂 Load<input type="file" accept=".json" onchange="loadSession(event)" class="hidden"></label>
+            <button onclick="addCounter()" class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-[#d4a017] font-[Cinzel] hover:border-[#d4a017]">✚ Counter</button>
+            <button onclick="openAddModal()" class="btn-action text-[10px] px-4 py-2 rounded-full font-bold uppercase text-white font-[Cinzel]">+ Creature</button>
             <button onclick="clearAll(event)" class="btn-danger text-[10px] px-4 py-2 rounded-full font-bold uppercase text-red-200 font-[Cinzel]">🗑 Clear All</button>
         </div>
     </div>
@@ -96,6 +105,14 @@
 
 <!-- TRACKER TAB -->
 <div id="panelTracker">
+    <!-- Fear Pool -->
+    <div class="mb-6 p-4 rounded-xl border border-[#3d362a] bg-[#1e1b16] text-center">
+        <div class="flex items-center justify-center gap-3 mb-3">
+            <span class="font-[Cinzel] text-xs uppercase tracking-widest text-zinc-500">Fear Pool</span>
+            <button onclick="resetFear()" class="text-[9px] uppercase tracking-wide text-zinc-600 hover:text-zinc-400 font-bold">Reset</button>
+        </div>
+        <div class="flex flex-wrap justify-center gap-2" id="fearDots"></div>
+    </div>
     <div id="creatureGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div id="emptyState" class="col-span-full text-center py-20">
             <div class="text-zinc-600 text-sm italic">No creatures yet. Click "+ Add Creature" to get started.</div>
@@ -144,21 +161,35 @@
                 <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Name</label>
                 <input id="modalName" type="text" placeholder="Goblin, Bandit, Dragon..." class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-3 gap-3">
                 <div>
-                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">HP (Max)</label>
-                    <input id="modalHp" type="number" value="6" min="1" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Evasion</label>
+                    <input id="modalEvasion" type="number" value="10" min="0" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
                 </div>
                 <div>
-                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Stress (Max)</label>
-                    <input id="modalStress" type="number" value="6" min="1" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">HP</label>
+                    <input id="modalHp" type="number" value="1" min="0" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
+                </div>
+                <div>
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Stress</label>
+                    <input id="modalStress" type="number" value="0" min="0" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
                 </div>
             </div>
-            <div>
-                <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Quantity</label>
-                <input id="modalQty" type="number" value="1" min="1" max="20" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
-                <div class="text-[10px] text-zinc-600 mt-1">More than 1 will create "Name 1", "Name 2", etc.</div>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Hope</label>
+                    <input id="modalHope" type="number" value="0" min="0" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
+                </div>
+                <div>
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Armor</label>
+                    <input id="modalArmor" type="number" value="0" min="0" max="30" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
+                </div>
+                <div>
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wide font-bold block mb-1">Quantity</label>
+                    <input id="modalQty" type="number" value="1" min="1" max="20" class="w-full bg-[#1a1714] border border-[#4a3f30] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#d4a017]">
+                </div>
             </div>
+            <div class="text-[10px] text-zinc-600">Quantity &gt; 1 will create "Name 1", "Name 2", etc.</div>
         </div>
 
         <div class="flex gap-3 mt-6">
@@ -170,17 +201,137 @@
 
 <script>
     const SAVE_KEY = 'dh_dm_creatures';
+    const FEAR_KEY = 'dh_dm_fear';
+    const COUNTERS_KEY = 'dh_dm_counters';
+    const CAMPAIGN_KEY = 'dh_campaign_name';
     let creatures = [];
+    let fearFilled = 0;
+    let actionCounters = [];
 
     function autoCache() {
         localStorage.setItem(SAVE_KEY, JSON.stringify(creatures));
+        localStorage.setItem(COUNTERS_KEY, JSON.stringify(actionCounters));
+    }
+
+    function saveSession() {
+        const campaign = document.getElementById('campaignName').value.trim();
+        const slug = campaign ? campaign.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' : '';
+        const data = { creatures, actionCounters, fearFilled, campaign };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = slug + 'dh-session-' + new Date().toISOString().slice(0,10) + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function loadSession(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const data = JSON.parse(e.target.result);
+                creatures = data.creatures || [];
+                actionCounters = data.actionCounters || [];
+                fearFilled = data.fearFilled || 0;
+                if (data.campaign) {
+                    document.getElementById('campaignName').value = data.campaign;
+                    localStorage.setItem(CAMPAIGN_KEY, data.campaign);
+                }
+                autoCache();
+                renderFearDots();
+                renderGrid();
+            } catch {
+                alert('Invalid session file.');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    function addCounter() {
+        actionCounters.push({ id: 'ac-' + Date.now(), label: 'Action Counter', value: 0 });
+        autoCache();
+        renderGrid();
+    }
+
+    function removeCounter(id) {
+        if (!confirm('Remove this counter?')) return;
+        actionCounters = actionCounters.filter(c => c.id !== id);
+        autoCache();
+        renderGrid();
+    }
+
+    function stepCounter(id, delta) {
+        const c = actionCounters.find(c => c.id === id);
+        if (!c) return;
+        c.value = Math.max(0, Math.min(100, c.value + delta));
+        autoCache();
+        renderCounterCard(c);
+    }
+
+    function renameCounter(id, val) {
+        const c = actionCounters.find(c => c.id === id);
+        if (!c) return;
+        c.label = val || 'Action Counter';
+        autoCache();
+    }
+
+    function buildCounterCard(c) {
+        const atZero = c.value === 0;
+        return `
+            <div id="${c.id}" class="creature-card flex flex-col ${atZero ? 'ring-1 ring-[#d4a01760]' : ''}" style="border-top-color: #d4a017">
+                <div class="flex justify-between items-center mb-3">
+                    <input value="${escHtmlAttr(c.label)}" onchange="renameCounter('${c.id}', this.value)" class="bg-transparent font-black text-sm uppercase font-[Cinzel] text-[#f5efe6] outline-none border-b border-transparent focus:border-[#d4a017] w-full mr-2">
+                    <button onclick="removeCounter('${c.id}')" class="text-zinc-700 hover:text-red-500 text-sm leading-none flex-shrink-0">✕</button>
+                </div>
+                <div class="flex items-center justify-center gap-4 flex-1">
+                    <button onclick="stepCounter('${c.id}', -1)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-[#2a2418] border border-[#3d362a] text-zinc-300 hover:text-white text-lg font-bold">−</button>
+                    <span class="text-4xl font-black font-[Cinzel] ${atZero ? 'text-[#d4a017]' : 'text-[#f5efe6]'} min-w-[3rem] text-center">${c.value}</span>
+                    <button onclick="stepCounter('${c.id}', 1)" class="w-9 h-9 flex items-center justify-center rounded-lg bg-[#2a2418] border border-[#3d362a] text-zinc-300 hover:text-white text-lg font-bold">+</button>
+                </div>
+            </div>`;
+    }
+
+    function renderCounterCard(c) {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        el.outerHTML = buildCounterCard(c);
+    }
+
+    function buildFearDots() {
+        let html = '';
+        for (let i = 0; i < 12; i++) {
+            html += `<div id="fear-${i}" class="dot ${i < fearFilled ? 'filled-fear' : ''}" onclick="toggleFear(${i})"></div>`;
+        }
+        return html;
+    }
+
+    function renderFearDots() {
+        document.getElementById('fearDots').innerHTML = buildFearDots();
+    }
+
+    function toggleFear(index) {
+        fearFilled = index < fearFilled ? index : index + 1;
+        localStorage.setItem(FEAR_KEY, fearFilled);
+        renderFearDots();
+    }
+
+    function resetFear() {
+        fearFilled = 0;
+        localStorage.setItem(FEAR_KEY, 0);
+        renderFearDots();
     }
 
     function openAddModal() {
         document.getElementById('addModal').classList.remove('hidden');
         document.getElementById('modalName').value = '';
-        document.getElementById('modalHp').value = '6';
-        document.getElementById('modalStress').value = '6';
+        document.getElementById('modalEvasion').value = '10';
+        document.getElementById('modalHp').value = '1';
+        document.getElementById('modalStress').value = '0';
+        document.getElementById('modalHope').value = '0';
+        document.getElementById('modalArmor').value = '0';
         document.getElementById('modalQty').value = '1';
         document.getElementById('modalName').focus();
     }
@@ -191,8 +342,11 @@
 
     function addCreatures() {
         const name = document.getElementById('modalName').value.trim();
-        const hp = parseInt(document.getElementById('modalHp').value) || 6;
-        const stress = parseInt(document.getElementById('modalStress').value) || 6;
+        const evasion = parseInt(document.getElementById('modalEvasion').value) || 0;
+        const hp = parseInt(document.getElementById('modalHp').value) || 0;
+        const stress = parseInt(document.getElementById('modalStress').value) || 0;
+        const hope = parseInt(document.getElementById('modalHope').value) || 0;
+        const armor = parseInt(document.getElementById('modalArmor').value) || 0;
         const qty = Math.max(1, Math.min(20, parseInt(document.getElementById('modalQty').value) || 1));
 
         if (!name) { alert('Please enter a name.'); return; }
@@ -202,10 +356,11 @@
             creatures.push({
                 id: 'c-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
                 name: creatureName,
-                hpMax: hp,
-                hpFilled: hp,
-                stressMax: stress,
-                stressFilled: stress
+                evasion,
+                hpMax: hp, hpFilled: hp,
+                stressMax: stress, stressFilled: stress,
+                hopeMax: hope, hopeFilled: hope,
+                armorMax: armor, armorFilled: armor
             });
         }
 
@@ -244,17 +399,22 @@
         const creature = creatures.find(c => c.id === creatureId);
         if (!creature) return;
 
+        if (type === 'evasion') {
+            creature.evasion = Math.max(0, Math.min(30, (creature.evasion || 0) + delta));
+            autoCache();
+            renderCard(creature);
+            return;
+        }
+
         const maxKey = type + 'Max';
         const filledKey = type + 'Filled';
-        const newMax = creature[maxKey] + delta;
+        const newMax = (creature[maxKey] || 0) + delta;
 
-        if (newMax < 1 || newMax > 30) return;
+        if (newMax < 0 || newMax > 30) return;
 
         creature[maxKey] = newMax;
-        // Keep filled within bounds
         if (creature[filledKey] > newMax) creature[filledKey] = newMax;
-        // If adding a dot, also add it filled (creature gains max HP = gains current HP)
-        if (delta > 0) creature[filledKey] = Math.min(creature[filledKey] + 1, newMax);
+        if (delta > 0) creature[filledKey] = Math.min((creature[filledKey] || 0) + 1, newMax);
 
         autoCache();
         renderCard(creature);
@@ -283,6 +443,27 @@
     }
 
     function buildCardInner(creature, dead) {
+        const adjBtn = (type, delta) => `<button onclick="adjustMax('${creature.id}', '${type}', ${delta})" class="w-4 h-4 flex items-center justify-center rounded bg-[#2a2418] border border-[#3d362a] text-zinc-500 hover:text-white text-[10px] leading-none">${delta < 0 ? '−' : '+'}</button>`;
+
+        const dotRow = (type, label, color) => {
+            const max = creature[type + 'Max'] || 0;
+            if (max === 0) return '';
+            const filled = creature[type + 'Filled'] || 0;
+            return `
+                <div class="mb-2.5">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-bold ${color} uppercase tracking-wide">${label}</span>
+                            ${adjBtn(type, -1)}${adjBtn(type, 1)}
+                        </div>
+                        <span class="text-[10px] text-zinc-600">${filled}/${max}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">${renderDots(creature, type)}</div>
+                </div>`;
+        };
+
+        const evasion = creature.evasion || 0;
+
         return `
             <div class="flex justify-between items-start mb-3">
                 <div class="flex items-center gap-2">
@@ -291,45 +472,35 @@
                 </div>
                 <button onclick="removeCreature('${creature.id}', event)" class="text-zinc-700 hover:text-red-500 text-sm leading-none">✕</button>
             </div>
-            <div class="mb-3">
-                <div class="flex items-center justify-between mb-1.5">
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[10px] font-bold text-red-400 uppercase tracking-wide">HP</span>
-                        <button onclick="adjustMax('${creature.id}', 'hp', -1)" class="w-4 h-4 flex items-center justify-center rounded bg-[#2a2418] border border-[#3d362a] text-zinc-500 hover:text-white text-[10px] leading-none">−</button>
-                        <button onclick="adjustMax('${creature.id}', 'hp', 1)" class="w-4 h-4 flex items-center justify-center rounded bg-[#2a2418] border border-[#3d362a] text-zinc-500 hover:text-white text-[10px] leading-none">+</button>
-                    </div>
-                    <span class="text-[10px] text-zinc-600">${creature.hpFilled}/${creature.hpMax}</span>
-                </div>
-                <div class="flex flex-wrap gap-1.5">
-                    ${renderDots(creature, 'hp')}
-                </div>
-            </div>
-            <div>
-                <div class="flex items-center justify-between mb-1.5">
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wide">Stress</span>
-                        <button onclick="adjustMax('${creature.id}', 'stress', -1)" class="w-4 h-4 flex items-center justify-center rounded bg-[#2a2418] border border-[#3d362a] text-zinc-500 hover:text-white text-[10px] leading-none">−</button>
-                        <button onclick="adjustMax('${creature.id}', 'stress', 1)" class="w-4 h-4 flex items-center justify-center rounded bg-[#2a2418] border border-[#3d362a] text-zinc-500 hover:text-white text-[10px] leading-none">+</button>
-                    </div>
-                    <span class="text-[10px] text-zinc-600">${creature.stressFilled}/${creature.stressMax}</span>
-                </div>
-                <div class="flex flex-wrap gap-1.5">
-                    ${renderDots(creature, 'stress')}
-                </div>
-            </div>
+            ${evasion > 0 ? `
+            <div class="flex items-center gap-2 mb-3 pb-2.5 border-b border-[#2a2418]">
+                <span class="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Evasion</span>
+                ${adjBtn('evasion', -1)}
+                <span class="text-sm font-bold text-blue-200">${evasion}</span>
+                ${adjBtn('evasion', 1)}
+            </div>` : ''}
+            ${dotRow('hp', 'HP', 'text-red-400')}
+            ${dotRow('stress', 'Stress', 'text-purple-400')}
+            ${dotRow('hope', 'Hope', 'text-amber-400')}
+            ${dotRow('armor', 'Armor', 'text-blue-400')}
         `;
     }
 
     function renderGrid() {
         const grid = document.getElementById('creatureGrid');
-        const empty = document.getElementById('emptyState');
 
-        if (creatures.length === 0) {
+        if (creatures.length === 0 && actionCounters.length === 0) {
             grid.innerHTML = '<div id="emptyState" class="col-span-full text-center py-20"><div class="text-zinc-600 text-sm italic">No creatures yet. Click "+ Add Creature" to get started.</div></div>';
             return;
         }
 
         grid.innerHTML = '';
+        // Counters always first
+        actionCounters.forEach(c => {
+            const div = document.createElement('div');
+            div.innerHTML = buildCounterCard(c);
+            grid.appendChild(div.firstElementChild);
+        });
         creatures.forEach(creature => {
             const dead = isCreatureDead(creature);
             const div = document.createElement('div');
@@ -342,9 +513,13 @@
 
     function clearAll(event) {
         if (event) { event.stopPropagation(); event.preventDefault(); }
-        if (!confirm('Remove all creatures? This cannot be undone.')) return;
+        if (!confirm('Clear all creatures, counters and fear pool? This cannot be undone.')) return;
         creatures = [];
+        actionCounters = [];
+        fearFilled = 0;
+        localStorage.setItem(FEAR_KEY, 0);
         autoCache();
+        renderFearDots();
         renderGrid();
     }
 
@@ -354,6 +529,13 @@
         if (raw) {
             try { creatures = JSON.parse(raw) || []; } catch { creatures = []; }
         }
+        fearFilled = parseInt(localStorage.getItem(FEAR_KEY)) || 0;
+        renderFearDots();
+        try { actionCounters = JSON.parse(localStorage.getItem(COUNTERS_KEY)) || []; } catch { actionCounters = []; }
+        const savedCampaign = localStorage.getItem(CAMPAIGN_KEY) || '';
+        const cnInput = document.getElementById('campaignName');
+        cnInput.value = savedCampaign;
+        if (savedCampaign) cnInput.style.width = Math.min(savedCampaign.length + 2, 56) + 'ch';
         renderGrid();
 
         // Close modal on Escape
@@ -847,6 +1029,11 @@
         if (!obj) return '';
         if (typeof obj === 'string') return obj;
         return obj['en-US'] || obj['en'] || Object.values(obj)[0] || '';
+    }
+
+    function escHtmlAttr(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     }
 
     function escHtml(str) {
