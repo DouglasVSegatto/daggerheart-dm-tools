@@ -93,12 +93,19 @@
             <button onclick="switchTab('tracker')" id="tabTracker" class="tab-btn font-[Cinzel] text-[11px] uppercase tracking-wider pb-1 font-bold active">⚔️ Combat Tracker</button>
             <button onclick="switchTab('compendium')" id="tabCompendium" class="tab-btn font-[Cinzel] text-[11px] uppercase tracking-wider pb-1 font-bold">📖 Compendium</button>
         </div>
-        <div id="trackerActions" class="flex items-center justify-end gap-2">
-            <button onclick="saveSession()" class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-zinc-400 font-[Cinzel] hover:border-[#d4a017] hover:text-[#d4a017]">💾 Save</button>
-            <label class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-zinc-400 font-[Cinzel] hover:border-[#d4a017] hover:text-[#d4a017] cursor-pointer">📂 Load<input type="file" accept=".json" onchange="loadSession(event)" class="hidden"></label>
-            <button onclick="addCounter()" class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-[#d4a017] font-[Cinzel] hover:border-[#d4a017]">✚ Counter</button>
-            <button onclick="openAddModal()" class="btn-action text-[10px] px-4 py-2 rounded-full font-bold uppercase text-white font-[Cinzel]">+ Creature</button>
-            <button onclick="clearAll(event)" class="btn-danger text-[10px] px-4 py-2 rounded-full font-bold uppercase text-red-200 font-[Cinzel]">🗑 Clear All</button>
+        <div id="trackerActions" class="flex flex-col items-end gap-1.5">
+            <div class="flex items-center gap-2">
+                <button onclick="saveSession()" class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-zinc-400 font-[Cinzel] hover:border-[#d4a017] hover:text-[#d4a017]">💾 Save</button>
+                <label class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-zinc-400 font-[Cinzel] hover:border-[#d4a017] hover:text-[#d4a017] cursor-pointer">📂 Load<input type="file" accept=".json" onchange="loadSession(event)" class="hidden"></label>
+                <button onclick="addCounter()" class="bg-[#2a2418] border border-[#4a3f30] text-[10px] px-3 py-2 rounded-full font-bold uppercase text-[#d4a017] font-[Cinzel] hover:border-[#d4a017]">✚ Counter</button>
+                <button onclick="openAddModal()" class="btn-action text-[10px] px-4 py-2 rounded-full font-bold uppercase text-white font-[Cinzel]">+ Creature</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="clearCreatures(event)" class="bg-[#2a1a1a] border border-[#4a2a2a] text-[10px] px-3 py-1.5 rounded-full font-bold uppercase text-red-400 font-[Cinzel] hover:border-red-500">🗑 Creatures</button>
+                <button onclick="clearCounters(event)" class="bg-[#2a1a1a] border border-[#4a2a2a] text-[10px] px-3 py-1.5 rounded-full font-bold uppercase text-red-400 font-[Cinzel] hover:border-red-500">🗑 Counters</button>
+                <button onclick="resetFear()" class="bg-[#2a1a1a] border border-[#4a2a2a] text-[10px] px-3 py-1.5 rounded-full font-bold uppercase text-red-400 font-[Cinzel] hover:border-red-500">🗑 Fear</button>
+                <button onclick="clearAll(event)" class="btn-danger text-[10px] px-4 py-1.5 rounded-full font-bold uppercase text-red-200 font-[Cinzel]">🗑 All</button>
+            </div>
         </div>
     </div>
 </nav>
@@ -109,7 +116,6 @@
     <div class="mb-6 p-4 rounded-xl border border-[#3d362a] bg-[#1e1b16] text-center">
         <div class="flex items-center justify-center gap-3 mb-3">
             <span class="font-[Cinzel] text-xs uppercase tracking-widest text-zinc-500">Fear Pool</span>
-            <button onclick="resetFear()" class="text-[9px] uppercase tracking-wide text-zinc-600 hover:text-zinc-400 font-bold">Reset</button>
         </div>
         <div class="flex flex-wrap justify-center gap-2" id="fearDots"></div>
     </div>
@@ -211,6 +217,7 @@
     function autoCache() {
         localStorage.setItem(SAVE_KEY, JSON.stringify(creatures));
         localStorage.setItem(COUNTERS_KEY, JSON.stringify(actionCounters));
+        localStorage.setItem(FEAR_KEY, String(fearFilled));
     }
 
     function saveSession() {
@@ -314,13 +321,13 @@
 
     function toggleFear(index) {
         fearFilled = index < fearFilled ? index : index + 1;
-        localStorage.setItem(FEAR_KEY, fearFilled);
+        localStorage.setItem(FEAR_KEY, String(fearFilled));
         renderFearDots();
     }
 
     function resetFear() {
         fearFilled = 0;
-        localStorage.setItem(FEAR_KEY, 0);
+        localStorage.setItem(FEAR_KEY, fearFilled);
         renderFearDots();
     }
 
@@ -509,6 +516,22 @@
             div.innerHTML = buildCardInner(creature, dead);
             grid.appendChild(div);
         });
+    }
+
+    function clearCreatures(event) {
+        if (event) { event.stopPropagation(); event.preventDefault(); }
+        if (!confirm('Remove all creatures?')) return;
+        creatures = [];
+        autoCache();
+        renderGrid();
+    }
+
+    function clearCounters(event) {
+        if (event) { event.stopPropagation(); event.preventDefault(); }
+        if (!confirm('Remove all counters?')) return;
+        actionCounters = [];
+        autoCache();
+        renderGrid();
     }
 
     function clearAll(event) {
