@@ -894,6 +894,15 @@
         `;
     }
 
+    function renderDescBlocks(descArr) {
+        if (!descArr || !Array.isArray(descArr)) return '';
+        return descArr.map(d => {
+            if (d.paragraph) return `<p>${escHtml(getLocStr(d.paragraph))}</p>`;
+            if (d.list) return `<ul class="ml-4 list-disc">${d.list.map(li => `<li>${escHtml(getLocStr(li))}</li>`).join('')}</ul>`;
+            return '';
+        }).join('');
+    }
+
     function renderWeaponCard(item) {
         let html = '';
         const type = (item.type || '').replace(/_/g, ' ');
@@ -914,8 +923,8 @@
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1"><span class="text-[10px] font-bold text-amber-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-500">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1"><span class="text-[10px] font-bold text-amber-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-500">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
@@ -932,8 +941,8 @@
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1"><span class="text-[10px] font-bold text-blue-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1"><span class="text-[10px] font-bold text-blue-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
@@ -947,14 +956,14 @@
         if (item.startingEvasion) html += `<span class="text-[9px] bg-[#2a2418] border border-[#3d362a] rounded px-1.5 py-0.5 text-blue-300">Evasion ${item.startingEvasion}</span>`;
         html += `</div>`;
         if (item.description && Array.isArray(item.description)) {
-            const desc = item.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ');
-            html += `<div class="text-xs text-zinc-500 mb-2">${escHtml(desc)}</div>`;
+            const desc = renderDescBlocks(item.description);
+            html += `<div class="text-xs text-zinc-500 mb-2">${desc}</div>`;
         }
         if (item.hopeFeature) {
             const fname = item.hopeFeature.name ? getLocStr(item.hopeFeature.name) : '';
-            const fdesc = item.hopeFeature.description ? item.hopeFeature.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
+            const fdesc = item.hopeFeature.description ? renderDescBlocks(item.hopeFeature.description) : '';
             html += `<div class="mt-1.5"><span class="text-[9px] font-bold text-zinc-500 uppercase">Hope Feature</span></div>`;
-            html += `<div class="mt-0.5"><span class="text-[10px] font-bold text-pink-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${escHtml(fdesc)}</span></div>`;
+            html += `<div class="mt-0.5"><span class="text-[10px] font-bold text-pink-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${fdesc}</span></div>`;
         }
         if (item.classFeatures && item.classFeatures.length) {
             html += `<div class="mt-1.5"><span class="text-[9px] font-bold text-zinc-500 uppercase">Class Features</span></div>`;
@@ -977,8 +986,8 @@
             html += `<div class="mt-1.5"><span class="text-[9px] font-bold text-zinc-500 uppercase">Foundation</span></div>`;
             html += item.foundation.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-0.5"><span class="text-[10px] font-bold text-pink-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-500">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-0.5"><span class="text-[10px] font-bold text-pink-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-500">${fdesc}</span></div>`;
             }).join('');
         }
         if (item.specialization && item.specialization.features) {
@@ -1001,14 +1010,14 @@
     function renderAncestryCard(item) {
         let html = '';
         if (item.description && Array.isArray(item.description)) {
-            const desc = item.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ');
-            html += `<div class="text-xs text-zinc-500 mb-2">${escHtml(desc)}</div>`;
+            const desc = renderDescBlocks(item.description);
+            html += `<div class="text-xs text-zinc-500 mb-2">${desc}</div>`;
         }
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1"><span class="text-[10px] font-bold text-green-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1"><span class="text-[10px] font-bold text-green-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
@@ -1017,8 +1026,8 @@
     function renderCommunityCard(item) {
         let html = '';
         if (item.description && Array.isArray(item.description)) {
-            const desc = item.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ');
-            html += `<div class="text-xs text-zinc-500 mb-2">${escHtml(desc)}</div>`;
+            const desc = renderDescBlocks(item.description);
+            html += `<div class="text-xs text-zinc-500 mb-2">${desc}</div>`;
         }
         if (item.personalities && item.personalities.length) {
             html += `<div class="flex flex-wrap gap-1 mb-2">${item.personalities.map(p => `<span class="text-[9px] bg-[#2a2418] border border-[#3d362a] rounded px-1.5 py-0.5 text-yellow-300">${escHtml(getLocStr(p))}</span>`).join('')}</div>`;
@@ -1026,8 +1035,8 @@
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1"><span class="text-[10px] font-bold text-yellow-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1"><span class="text-[10px] font-bold text-yellow-200">${escHtml(fname)}</span> <span class="text-xs text-zinc-400">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
@@ -1044,8 +1053,8 @@
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1">${fname ? `<span class="text-[10px] font-bold text-cyan-200">${escHtml(fname)}</span> ` : ''}<span class="text-xs text-zinc-400">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1">${fname ? `<span class="text-[10px] font-bold text-cyan-200">${escHtml(fname)}</span> ` : ''}<span class="text-xs text-zinc-400">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
@@ -1056,8 +1065,8 @@
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1">${fname ? `<span class="text-[10px] font-bold text-emerald-200">${escHtml(fname)}</span> ` : ''}<span class="text-xs text-emerald-300">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1">${fname ? `<span class="text-[10px] font-bold text-emerald-200">${escHtml(fname)}</span> ` : ''}<span class="text-xs text-emerald-300">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
@@ -1068,8 +1077,8 @@
         if (item.features && item.features.length) {
             html += item.features.map(f => {
                 const fname = f.name ? getLocStr(f.name) : '';
-                const fdesc = f.description ? f.description.map(d => d.paragraph ? getLocStr(d.paragraph) : '').join(' ') : '';
-                return `<div class="mt-1">${fname ? `<span class="text-[10px] font-bold text-purple-200">${escHtml(fname)}</span> ` : ''}<span class="text-xs text-zinc-400">${escHtml(fdesc)}</span></div>`;
+                const fdesc = f.description ? renderDescBlocks(f.description) : '';
+                return `<div class="mt-1">${fname ? `<span class="text-[10px] font-bold text-purple-200">${escHtml(fname)}</span> ` : ''}<span class="text-xs text-zinc-400">${fdesc}</span></div>`;
             }).join('');
         }
         return html;
